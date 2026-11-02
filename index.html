@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>의복의 기능 - 귀여운 두더지 잡기 게임 v4</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; user-select: none; touch-action: manipulation; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background-color: #e0f2fe; }
+  body { display: flex; justify-content: center; align-items: center; }
+  
+  #app { 
+    width: 100vw; 
+    height: 100dvh; 
+    max-width: 900px; 
+    max-height: 1000px; 
+    background: #ffffff; 
+    border-radius: 0px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+    position: relative; 
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column; 
+  }
+
+  @media (min-width: 600px) and (min-height: 600px) {
+    #app { border-radius: 24px; height: 95dvh; }
+  }
+  
+  .screen { position: absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; padding: 20px; text-align: center; background: white; z-index: 10; overflow-y: auto; }
+  .hidden { display: none !important; }
+  
+  /* 하단 우측 톱니바퀴 관리자 버튼 */
+  .admin-bottom-btn { position: absolute; bottom: 16px; right: 20px; background: #e2e8f0; color: #475569; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; transition: all 0.2s; z-index: 20; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .admin-bottom-btn:hover { background: #cbd5e1; transform: rotate(45deg); }
+
+  h1 { color: #1e293b; font-size: clamp(22px, 5vw, 30px); margin-bottom: 8px; font-weight: 800; }
+  p.subtitle { color: #64748b; font-size: clamp(13px, 3.5vw, 16px); margin-bottom: 16px; }
+  
+  .mode-select-box { display: flex; gap: 15px; margin: 12px 0; justify-content: center; width: 100%; max-width: 400px; }
+  .mode-btn { flex: 1; padding: 14px; border: 3px solid #cbd5e1; border-radius: 14px; background: #f8fafc; cursor: pointer; font-size: 17px; font-weight: bold; color: #475569; transition: all 0.2s; }
+  .mode-btn.active { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; box-shadow: 0 4px 12px rgba(59,130,246,0.25); }
+
+  .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; justify-content: center; width: 100%; }
+  .btn { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: clamp(14px, 4vw, 17px); font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+  .btn:hover { background: #2563eb; transform: translateY(-2px); }
+  .btn-secondary { background: #64748b; box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3); }
+  .btn-secondary:hover { background: #475569; }
+  .btn-success { background: #10b981; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+  .btn-success:hover { background: #059669; }
+  .btn-warning { background: #f59e0b; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+  .btn-warning:hover { background: #d97706; }
+
+  .input-group { margin-bottom: 12px; width: 90%; max-width: 340px; }
+  .input-group input { width: 100%; padding: 14px 16px; border: 3px solid #cbd5e1; border-radius: 12px; font-size: 18px; text-align: center; outline: none; margin-bottom: 8px; transition: 0.2s; font-weight: bold; }
+  .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+
+  /* 학습 요약 모달 및 팝업 카드리스트 */
+  .study-container { width: 100%; max-width: 780px; flex: 1; max-height: 60vh; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 10px 0; text-align: left; padding: 10px; border: 2px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
+  .popup-container { width: 100%; max-width: 650px; flex: 1; max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 10px 0; padding: 10px; background: #f1f5f9; border-radius: 16px; border: 2px solid #cbd5e1; }
+  .popup-item { background: white; padding: 8px 12px; border-radius: 12px; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-weight: bold; color: #1e293b; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  .popup-item-img { width: 40px; height: 40px; }
+
+  .study-card { padding: 12px; border-radius: 12px; border: 2px solid; }
+  .card-protection { background: #eff6ff; border-color: #93c5fd; }
+  .card-expression { background: #fdf2f8; border-color: #fbcfe8; }
+  .card-title { font-size: 17px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card-protection .card-title { color: #1d4ed8; }
+  .card-expression .card-title { color: #be185d; }
+  .keyword-list { list-style: none; font-size: 14px; line-height: 1.4; color: #334155; }
+  .keyword-list li { margin-bottom: 6px; background: white; padding: 6px 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between; }
+  .keyword-svg-icon { width: 38px; height: 38px; display: inline-block; }
+
+  /* 망치 룰렛 화면 */
+  .roulette-box { width: 280px; height: 140px; border: 5px solid #3b82f6; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; margin: 15px 0; background: #f8fafc; color: #1e293b; box-shadow: inset 0 3px 6px rgba(0,0,0,0.06); }
+  .hammer-icon-lg { width: 80px; height: 80px; margin-bottom: 4px; }
+
+  /* 황금색 대형 HUD 상단바 */
+  #hud { width: 100%; height: 70px; min-height: 70px; background: #0f172a; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 12px; font-size: clamp(13px, 3.5vw, 17px); font-weight: bold; z-index: 50; border-bottom: 4px solid #334155; }
+  .hud-item { display: flex; align-items: center; gap: 4px; }
+  .hud-score-val { font-size: clamp(26px, 7vw, 40px); color: #facc15; font-weight: 900; text-shadow: 0 0 10px rgba(250,204,21,0.8), 2px 2px 0 #78350f; font-family: 'Impact', sans-serif; }
+  .target-badge { padding: 6px 12px; border-radius: 20px; color: white; font-size: clamp(14px, 3.8vw, 18px); font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); white-space: nowrap; }
+  .mode-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; background: #334155; color: #cbd5e1; margin-left: 4px; }
+  .home-btn { background: #ef4444; border: none; color: white; padding: 8px 12px; border-radius: 10px; font-weight: bold; font-size: clamp(12px, 3vw, 14px); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; z-index: 60; box-shadow: 0 2px 6px rgba(239,68,68,0.4); white-space: nowrap; }
+  .home-btn:hover { background: #dc2626; transform: scale(1.05); }
+  .bg-protection { background-color: #2563eb; }
+  .bg-expression { background-color: #ec4899; }
+
+  /* 두더지 게임판 (자동 가로/세로 오리엔테이션 대응) */
+  #mole-board { 
+    width: 100%; 
+    flex: 1; 
+    background: #86efac; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    grid-template-rows: repeat(3, 1fr); 
+    gap: clamp(8px, 2vw, 16px); 
+    padding: clamp(10px, 2.5vw, 20px); 
+    position: relative; 
+  }
+  .hole-wrapper { position: relative; background: radial-gradient(circle, #4ade80 0%, #16a34a 100%); border-radius: 16px; overflow: hidden; display: flex; justify-content: center; align-items: flex-end; border: 3px solid #15803d; box-shadow: inset 0 6px 10px rgba(0,0,0,0.25); }
+  .hole-bg { position: absolute; bottom: 0; width: 90%; height: 35%; background: #3f2e1a; border-radius: 50% 50% 0 0; border: 3px solid #271d10; }
+  
+  /* 두더지 & 퀴즈 그래픽 연출 */
+  .mole { width: 94%; height: 98%; background: transparent; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; bottom: -110%; transition: bottom 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; padding-bottom: 2px; }
+  .mole.up { bottom: 0%; }
+  
+  .mole-quiz-area { background: transparent; border: none; padding: 0; font-size: clamp(16px, 4.5vw, 24px); font-weight: 900; color: #0f172a; text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 3px 6px rgba(0,0,0,0.3); margin-bottom: 2px; min-width: 50px; height: clamp(45px, 10vw, 65px); display: flex; justify-content: center; align-items: center; word-break: keep-all; z-index: 2; pointer-events: none; }
+  .mole-body-img { width: clamp(75px, 18vw, 110px); height: clamp(70px, 16vw, 105px); position: relative; z-index: 1; }
+
+  /* 가로 모드 (Landscape) 전용 최적화 레시피 */
+  @media (orientation: landscape) and (max-height: 500px) {
+    #hud { height: 50px; min-height: 50px; padding: 0 10px; }
+    .hud-score-val { font-size: 26px; }
+    .target-badge { font-size: 13px; padding: 4px 8px; }
+    .home-btn { padding: 4px 8px; font-size: 12px; }
+    .mole-quiz-area { height: 38px; font-size: 16px; }
+    .mole-body-img { width: 65px; height: 60px; }
+    #mole-board { gap: 6px; padding: 6px; }
+  }
+
+  /* 플로팅 점수 이펙트 */
+  .float-score { position: absolute; font-size: clamp(24px, 6vw, 38px); font-weight: 900; pointer-events: none; z-index: 30; animation: floatUp 0.8s ease-out forwards; text-shadow: 0 3px 8px rgba(0,0,0,0.5); }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    50% { transform: translateY(-35px) scale(1.4); }
+    100% { opacity: 0; transform: translateY(-70px) scale(1); }
+  }
+
+  /* 점수표 모달 & 탭 */
+  .score-card { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 14px; width: 90%; max-width: 400px; margin: 8px 0; }
+  .final-score { font-size: 34px; font-weight: 900; color: #2563eb; margin-top: 4px; }
+  
+  .tab-container { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; max-width: 550px; }
+  .tab-btn { flex: 1; padding: 10px; border: 2px solid #cbd5e1; border-radius: 10px; background: #f1f5f9; cursor: pointer; font-weight: bold; font-size: 14px; color: #475569; }
+  .tab-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+  .leaderboard-modal { width: 100%; max-width: 550px; flex: 1; max-height: 35vh; overflow-y: auto; border: 2px solid #cbd5e1; border-radius: 12px; text-align: left; font-size: 14px; background: white; }
+  .leaderboard-modal table { width: 100%; border-collapse: collapse; }
+  .leaderboard-modal th, .leaderboard-modal td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; text-align: center; }
+  .leaderboard-modal th { background: #f1f5f9; position: sticky; top: 0; color: #334155; font-weight: bold; }
+  .delete-btn { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .delete-btn:hover { background: #b91c1c; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- 우측 하단 ⚙️ 관리자 버튼 -->
+  <button class="admin-bottom-btn" onclick="openAdminModal()" title="관리자 설정">⚙️</button>
+
+  <!-- 1. 시작 화면 -->
+  <div id="start-screen" class="screen">
+    <h1>🔨 의복의 기능 두더지 잡기</h1>
+    <p class="subtitle">개인정보 입력 없이 신나고 재미있게 배우는 의복의 의미와 기능!</p>
+    
+    <div class="input-group">
+      <input type="text" id="student-nickname" placeholder="닉네임 입력 (예: 멋쟁이두더지)" required maxlength="12">
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-success" onclick="openStudyScreen()">📚 의복 기능 미리보기</button>
+      <button class="btn" style="font-size: 18px; padding: 16px 30px;" onclick="startRoulette()">🎮 게임 시작하기</button>
+      <button class="btn btn-secondary" onclick="openLeaderboardScreen()">🏆 실시간 점수표</button>
+    </div>
+  </div>
+
+  <!-- 2. 모범 답안 공부 화면 -->
+  <div id="study-screen" class="screen hidden">
+    <h1>📚 의복의 기능 키워드 & 그림 요약</h1>
+    <p class="subtitle">게임에 나올 28가지 전체 단어와 그림을 미리 확인하세요!</p>
+    
+    <div class="study-container">
+      <div class="study-card card-protection">
+        <div class="card-title">🛡️ 보호의 기능 (보호 망치)</div>
+        <ul class="keyword-list">
+          <li><span><strong>체온 조절</strong></span> <div class="keyword-svg-icon" id="svg-study-thermal-ctrl"></div></li>
+          <li><span>방한복</span> <div class="keyword-svg-icon" id="svg-study-thermal-cold"></div></li>
+          <li><span>방서복</span> <div class="keyword-svg-icon" id="svg-study-thermal-hot"></div></li>
+          <li><span><strong>청결 유지</strong></span> <div class="keyword-svg-icon" id="svg-study-clean-main"></div></li>
+          <li><span>속옷</span> <div class="keyword-svg-icon" id="svg-study-underwear"></div></li>
+          <li><span>양말</span> <div class="keyword-svg-icon" id="svg-study-socks"></div></li>
+          <li><span><strong>신체 안전</strong></span> <div class="keyword-svg-icon" id="svg-study-safety-body"></div></li>
+          <li><span>소방복</span> <div class="keyword-svg-icon" id="svg-study-fire-suit"></div></li>
+          <li><span>실험복</span> <div class="keyword-svg-icon" id="svg-study-lab-coat"></div></li>
+          <li><span>구명조끼</span> <div class="keyword-svg-icon" id="svg-study-life-vest"></div></li>
+          <li><span><strong>능률 향상</strong></span> <div class="keyword-svg-icon" id="svg-study-efficiency-up"></div></li>
+          <li><span>작업복</span> <div class="keyword-svg-icon" id="svg-study-work-clothes"></div></li>
+          <li><span>운동복</span> <div class="keyword-svg-icon" id="svg-study-sportswear"></div></li>
+          <li><span>수영복</span> <div class="keyword-svg-icon" id="svg-study-swimsuit"></div></li>
+        </ul>
+      </div>
+
+      <div class="study-card card-expression">
+        <div class="card-title">🎨 표현의 기능 (표현 망치)</div>
+        <ul class="keyword-list">
+          <li><span><strong>예의 표현</strong></span> <div class="keyword-svg-icon" id="svg-study-polite-express"></div></li>
+          <li><span>예복</span> <div class="keyword-svg-icon" id="svg-study-formal-dress"></div></li>
+          <li><span>상복</span> <div class="keyword-svg-icon" id="svg-study-mourning-suit"></div></li>
+          <li><span>혼례복</span> <div class="keyword-svg-icon" id="svg-study-wedding-dress"></div></li>
+          <li><span><strong>신분 표현</strong></span> <div class="keyword-svg-icon" id="svg-study-status-express"></div></li>
+          <li><span>교복</span> <div class="keyword-svg-icon" id="svg-study-school-uniform"></div></li>
+          <li><span>경찰복</span> <div class="keyword-svg-icon" id="svg-study-police-uniform"></div></li>
+          <li><span>군복</span> <div class="keyword-svg-icon" id="svg-study-military-uniform"></div></li>
+          <li><span><strong>아름다움 표현</strong></span> <div class="keyword-svg-icon" id="svg-study-beauty-express"></div></li>
+          <li><span>귀걸이</span> <div class="keyword-svg-icon" id="svg-study-earrings"></div></li>
+          <li><span>목걸이</span> <div class="keyword-svg-icon" id="svg-study-necklace"></div></li>
+          <li><span><strong>개성 표현</strong></span> <div class="keyword-svg-icon" id="svg-study-individuality-express"></div></li>
+          <li><span>독특한 운동화</span> <div class="keyword-svg-icon" id="svg-study-unique-shoes"></div></li>
+          <li><span>독특한 가방</span> <div class="keyword-svg-icon" id="svg-study-unique-bag"></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <button class="btn btn-warning" onclick="closeStudyScreen()">공부 완료! 망치 뽑으러 가기 ➡️</button>
+  </div>
+
+  <!-- 3. 망치 룰렛 화면 -->
+  <div id="roulette-screen" class="screen hidden">
+    <h2>🎯 오늘 내가 사용할 망치는?</h2>
+    <div id="roulette-display" class="roulette-box">
+      <div id="hammer-icon" class="hammer-icon-lg"></div>
+      <div id="hammer-text">추첨 중...</div>
+    </div>
+    <button id="roulette-next-btn" class="btn hidden" onclick="showHammerKeywordPopup()">키워드 확인하고 시작하기 ➡️</button>
+  </div>
+
+  <!-- 3.5 망치 뽑기 직후 해당 망치 전용 키워드 팝업 화면 -->
+  <div id="hammer-popup-screen" class="screen hidden">
+    <h2 id="hammer-popup-title" style="font-size: 26px; color: #1e293b; margin-bottom: 4px;"></h2>
+    <p class="subtitle" style="margin-bottom: 6px;">이번 게임에서 때려야 할 14가지 정답 키워드입니다! (<strong><span id="popup-timer-num">10</span>초 후 자동 시작</strong>)</p>
+    
+    <div id="hammer-popup-list" class="popup-container">
+      <!-- 동적 생성 -->
+    </div>
+
+    <button class="btn btn-success" style="font-size: 18px; padding: 14px 32px;" onclick="clearPopupTimerAndStart()">🚀 바로 시작하기</button>
+  </div>
+
+  <!-- 4. 게임 화면 -->
+  <div id="game-screen" class="screen hidden" style="padding:0;">
+    <div id="hud">
+      <div class="hud-item">
+        <button class="home-btn" onclick="exitToHome()">🏠 홈으로</button>
+        <span id="hud-user" style="margin-left: 6px;"></span>
+        <span id="hud-mode-badge" class="mode-badge">연습모드</span>
+      </div>
+      <div id="hud-target-badge" class="target-badge">🔨 망치</div>
+      <div class="hud-item">⏱️ <span id="hud-timer">150</span>초</div>
+      <div class="hud-item">⭐ <span id="hud-score" class="hud-score-val">0</span>점</div>
+    </div>
+    <div id="mole-board">
+      <!-- 3x3 구멍 JS 생성 -->
+    </div>
+  </div>
+
+  <!-- 5. 점수표 화면 -->
+  <div id="leaderboard-screen" class="screen hidden">
+    <h1 id="leaderboard-title">🏆 기록 모드 점수표</h1>
+    <p class="subtitle">친구들의 실시간 점수를 확인해 보세요!</p>
+    
+    <div class="tab-container">
+      <button id="tab-record-btn" class="tab-btn active" onclick="switchLeaderboardTab('RECORD')">🏆 기록 모드 점수표</button>
+      <button id="tab-practice-btn" class="tab-btn" onclick="switchLeaderboardTab('PRACTICE')">🏋️ 연습 모드 점수표</button>
+    </div>
+
+    <div class="leaderboard-modal">
+      <table>
+        <thead>
+          <tr><th>순위</th><th>닉네임</th><th>망치</th><th>점수</th><th class="admin-col hidden">관리</th></tr>
+        </thead>
+        <tbody id="leaderboard-body-main"></tbody>
+      </table>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-success" onclick="exportToCSV()">📥 점수표 엑셀(CSV) 저장</button>
+      <button class="btn btn-secondary" onclick="closeLeaderboardScreen()">🏠 처음으로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- 6. 결과 화면 -->
+  <div id="result-screen" class="screen hidden">
+    <h1>🎉 게임 종료!</h1>
+    <p id="res-mode-text" style="color:#2563eb; font-weight:bold; font-size:18px; margin-bottom:8px;"></p>
+    
+    <div class="score-card">
+      <div>닉네임: <strong id="res-user"></strong></div>
+      <div>사용한 망치: <strong id="res-target"></strong></div>
+      <div>성공: <span id="res-success" style="color:#16a34a; font-weight:bold;">0</span>개 | 실패/폭탄: <span id="res-fail" style="color:#dc2626; font-weight:bold;">0</span>개</div>
+      <div class="final-score"><span id="res-score">0</span>점</div>
+    </div>
+    
+    <div class="tab-container" style="max-width: 500px;">
+      <button id="res-tab-record-btn" class="tab-btn active" onclick="switchLeaderboardTab('RECORD')">🏆 기록 모드 순위</button>
+      <button id="res-tab-practice-btn" class="tab-btn" onclick="switchLeaderboardTab('PRACTICE')">🏋️ 연습 모드 순위</button>
+    </div>
+
+    <div class="leaderboard-modal" style="max-height: 150px; max-width: 500px;">
+      <table>
+        <thead>
+          <tr><th>순위</th><th>닉네임</th><th>망치</th><th>점수</th></tr>
+        </thead>
+        <tbody id="leaderboard-body-result"></tbody>
+      </table>
+    </div>
+    <br>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="resetApp()">🏠 처음으로 돌아가기</button>
+      <button class="btn btn-success" onclick="exportToCSV()">📥 점수표 저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 부드러운 아동용 2D 일러스트 Vector SVG 생성기 ==================== //
+function generateSvgGraphic(type) {
+  switch(type) {
+    case "STATUS_EXPRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <!-- 사원증/학생증 목걸이 및 명함 -->
+        <path d="M50 10 C32 10, 32 38, 50 38 C68 38, 68 10, 50 10" fill="none" stroke="#ef4444" stroke-width="4"/>
+        <rect x="25" y="36" width="50" height="58" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="4"/>
+        <rect x="32" y="44" width="20" height="22" rx="4" fill="#38bdf8" stroke="#0f172a" stroke-width="2"/>
+        <line x1="58" y1="48" x2="68" y2="48" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+        <line x1="58" y1="56" x2="68" y2="56" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+        <rect x="32" y="74" width="36" height="12" rx="4" fill="#facc15" stroke="#0f172a" stroke-width="2"/>
+      </svg>`;
+
+    case "EARRINGS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <!-- 실제 보석 링/드롭 귀걸이 쌍 -->
+        <circle cx="32" cy="25" r="5" fill="#facc15" stroke="#0f172a" stroke-width="3"/>
+        <circle cx="32" cy="50" r="14" fill="none" stroke="#facc15" stroke-width="5"/>
+        <polygon points="32,66 40,84 24,84" fill="#ec4899" stroke="#0f172a" stroke-width="2"/>
+        
+        <circle cx="68" cy="25" r="5" fill="#facc15" stroke="#0f172a" stroke-width="3"/>
+        <circle cx="68" cy="50" r="14" fill="none" stroke="#facc15" stroke-width="5"/>
+        <polygon points="68,66 76,84 60,84" fill="#ec4899" stroke="#0f172a" stroke-width="2"/>
+      </svg>`;
+
+    case "UNIQUE_SHOES":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <!-- 선명한 캔버스 스니커즈 운동화 -->
+        <path d="M10 68 Q 30 35 55 42 L80 48 L94 65 L94 88 L10 88 Z" fill="#38bdf8" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M10 78 L94 78 L94 88 L10 88 Z" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>
+        <path d="M72 48 Q 84 55 94 65 L82 65 Z" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>
+        <!-- 신발끈 디테일 -->
+        <line x1="38" y1="48" x2="48" y2="60" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+        <line x1="48" y1="52" x2="58" y2="64" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+        <line x1="58" y1="56" x2="68" y2="68" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+      </svg>`;
+
+    case "THERMAL_CONTROL":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <circle cx="50" cy="50" r="32" fill="#bae6fd" stroke="#0284c7" stroke-width="4"/>
+        <path d="M50 22 L50 78" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="50" cy="68" r="8" fill="#ef4444"/>
+      </svg>`;
+
+    case "THERMAL_COLD":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M22 35 C22 24, 78 24, 78 35 L86 65 L72 68 L72 88 L28 88 L28 68 L14 65 Z" fill="#fef08a" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="36" y="22" width="28" height="14" rx="7" fill="#fef08a" stroke="#78350f" stroke-width="3"/>
+        <line x1="28" y1="48" x2="72" y2="48" stroke="#78350f" stroke-width="3"/>
+        <line x1="28" y1="68" x2="72" y2="68" stroke="#78350f" stroke-width="3"/>
+        <line x1="50" y1="36" x2="50" y2="88" stroke="#78350f" stroke-width="3"/>
+        <circle cx="38" cy="42" r="2.5" fill="#f43f5e"/><circle cx="62" cy="42" r="2.5" fill="#38bdf8"/>
+        <circle cx="42" cy="58" r="2.5" fill="#38bdf8"/><circle cx="65" cy="58" r="2.5" fill="#f43f5e"/>
+        <circle cx="35" cy="78" r="2.5" fill="#f43f5e"/><circle cx="60" cy="78" r="2.5" fill="#38bdf8"/>
+      </svg>`;
+
+    case "THERMAL_HOT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M28 25 C35 32, 65 32, 72 25 L68 55 L32 55 Z" fill="#38bdf8" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M30 58 L70 58 L66 85 L34 85 Z" fill="#fbcfe8" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <line x1="36" y1="18" x2="36" y2="28" stroke="#0f172a" stroke-width="4"/>
+        <line x1="64" y1="18" x2="64" y2="28" stroke="#0f172a" stroke-width="4"/>
+      </svg>`;
+
+    case "CLEAN_MAINTAIN":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <circle cx="50" cy="55" r="28" fill="#bae6fd" opacity="0.8" stroke="#0284c7" stroke-width="4"/>
+        <path d="M36 40 A 15 15 0 0 1 54 36" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <circle cx="75" cy="30" r="12" fill="#bae6fd" opacity="0.8" stroke="#0284c7" stroke-width="3"/>
+        <polygon points="25,20 28,26 34,28 28,30 25,36 23,30 17,28 23,26" fill="#facc15"/>
+        <polygon points="78,65 80,70 85,71 80,73 78,78 76,73 71,71 76,70" fill="#facc15"/>
+      </svg>`;
+
+    case "UNDERWEAR":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M26 20 L38 20 C42 30, 58 30, 62 20 L74 20 L68 55 L32 55 Z" fill="#ffffff" stroke="#334155" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M28 62 L72 62 C72 84, 28 84, 28 62 Z" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+        <circle cx="50" cy="40" r="3" fill="#f43f5e"/>
+      </svg>`;
+
+    case "SOCKS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M25 20 L55 20 L55 58 L78 68 C84 80, 72 90, 60 85 L25 70 Z" fill="#60a5fa" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="25" y="20" width="30" height="8" fill="#facc15" stroke="#1e293b" stroke-width="3"/>
+        <path d="M55 58 L38 48" stroke="#ffffff" stroke-width="4"/>
+      </svg>`;
+
+    case "SAFETY_BODY":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M50 12 L85 24 C85 58, 50 88, 50 88 C50 88, 15 58, 15 24 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="5"/>
+        <path d="M50 22 L75 32 C75 54, 50 78, 50 78 C50 78, 25 54, 25 32 Z" fill="#93c5fd"/>
+        <path d="M40 50 L48 58 L64 38" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    case "FIRE_SUIT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M20 40 C20 18, 80 18, 80 40 L88 46 L12 46 Z" fill="#ef4444" stroke="#1e293b" stroke-width="4"/>
+        <rect x="34" y="20" width="32" height="14" rx="4" fill="#facc15" stroke="#1e293b" stroke-width="3"/>
+        <path d="M24 50 L76 50 L70 88 L30 88 Z" fill="#f97316" stroke="#1e293b" stroke-width="4"/>
+        <rect x="24" y="68" width="52" height="8" fill="#facc15" stroke="#1e293b" stroke-width="2"/>
+      </svg>`;
+
+    case "LAB_COAT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M20 22 L36 18 L50 26 L64 18 L80 22 L74 90 L26 90 Z" fill="#ffffff" stroke="#334155" stroke-width="4" stroke-linejoin="round"/>
+        <line x1="50" y1="26" x2="50" y2="90" stroke="#cbd5e1" stroke-width="3"/>
+        <path d="M55 50 L65 50 L72 70 L48 70 Z" fill="#c084fc" stroke="#334155" stroke-width="3"/>
+      </svg>`;
+
+    case "LIFE_VEST":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M20 20 L42 20 L46 42 L54 42 L58 20 L80 20 L74 90 L26 90 Z" fill="#f97316" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="22" y="52" width="56" height="9" fill="#facc15" stroke="#0f172a" stroke-width="3"/>
+        <rect x="22" y="68" width="56" height="9" fill="#facc15" stroke="#0f172a" stroke-width="3"/>
+        <line x1="50" y1="42" x2="50" y2="90" stroke="#0f172a" stroke-width="4"/>
+      </svg>`;
+
+    case "EFFICIENCY_UP":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <circle cx="58" cy="58" r="28" fill="#ffffff" stroke="#0f172a" stroke-width="4"/>
+        <path d="M58 38 L58 58 L70 58" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="38,10 14,52 34,52 26,90 62,40 42,40" fill="#facc15" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+      </svg>`;
+
+    case "WORK_CLOTHES":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M20 45 C20 22, 80 22, 80 45 Z" fill="#facc15" stroke="#0f172a" stroke-width="4"/>
+        <rect x="12" y="42" width="76" height="8" rx="4" fill="#eab308" stroke="#0f172a" stroke-width="3"/>
+        <path d="M20 68 L48 68 L68 58 L85 65 L88 88 L18 88 Z" fill="#78350f" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+      </svg>`;
+
+    case "SPORTSWEAR":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M18 22 C28 28, 42 28, 48 22 L45 52 L22 52 Z" fill="#facc15" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M52 22 C58 28, 72 28, 82 22 L78 52 L55 52 Z" fill="#38bdf8" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M20 58 L46 58 L44 88 L22 88 Z" fill="#2dd4bf" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M54 58 L80 58 L78 88 L56 88 Z" fill="#818cf8" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+      </svg>`;
+
+    case "SWIMSUIT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M30 22 C30 12, 70 12, 70 22 L62 65 C55 82, 45 82, 38 65 Z" fill="#fef08a" stroke="#f43f5e" stroke-width="4" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="3" fill="#38bdf8"/><circle cx="60" cy="38" r="3" fill="#f43f5e"/>
+        <circle cx="48" cy="52" r="3" fill="#f43f5e"/><circle cx="58" cy="65" r="3" fill="#38bdf8"/>
+        <path d="M30 22 C40 32, 60 32, 70 22" fill="none" stroke="#f43f5e" stroke-width="4"/>
+      </svg>`;
+
+    case "POLITE_EXPRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M12 42 L28 34 L44 42 L40 90 L16 90 Z" fill="#60a5fa" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M22 34 L28 44 L34 34" fill="none" stroke="#ffffff" stroke-width="4"/>
+        <path d="M50 58 Q 66 52 82 58 L90 90 L42 90 Z" fill="#f43f5e" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M52 46 L66 36 L80 46 L74 58 L58 58 Z" fill="#fef08a" stroke="#0f172a" stroke-width="3"/>
+      </svg>`;
+
+    case "FORMAL_DRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M36 22 L44 14 L56 14 L64 22 L58 42 L88 90 L12 90 L42 42 Z" fill="#fbcfe8" stroke="#9d174d" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M36 22 C44 32, 56 32, 64 22" fill="none" stroke="#9d174d" stroke-width="3"/>
+        <circle cx="50" cy="38" r="3" fill="#ffffff"/>
+      </svg>`;
+
+    case "MOURNING_SUIT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <rect x="20" y="20" width="60" height="70" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="4"/>
+        <polygon points="35,20 50,44 65,20" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+        <line x1="50" y1="44" x2="50" y2="90" stroke="#ffffff" stroke-width="3"/>
+        <rect x="15" y="45" width="12" height="24" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      </svg>`;
+
+    case "WEDDING_DRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M38 25 L45 16 L55 16 L62 25 L56 45 L86 90 L14 90 L44 45 Z" fill="#ffffff" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M24 68 Q 50 60 76 68" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+        <path d="M20 80 Q 50 72 80 80" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+      </svg>`;
+
+    case "SCHOOL_UNIFORM":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M20 30 L34 20 L66 20 L80 30 L74 62 L26 62 Z" fill="#475569" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <polygon points="38,20 50,34 62,20" fill="#ffffff"/>
+        <polygon points="46,34 54,34 56,60 50,64 44,60" fill="#ef4444"/>
+        <path d="M26 64 L74 64 L78 90 L22 90 Z" fill="#1e293b" stroke="#0f172a" stroke-width="4"/>
+      </svg>`;
+
+    case "POLICE_UNIFORM":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M24 22 Q 50 12 76 22 L80 28 L20 28 Z" fill="#0f172a" stroke="#0f172a" stroke-width="3"/>
+        <rect x="24" y="26" width="52" height="5" fill="#facc15"/>
+        <path d="M18 36 L32 28 L68 28 L82 36 L76 68 L24 68 Z" fill="#0284c7" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <line x1="50" y1="28" x2="50" y2="68" stroke="#0f172a" stroke-width="4"/>
+        <polygon points="32,40 38,40 38,48 32,48" fill="#facc15" stroke="#0f172a" stroke-width="2"/>
+        <path d="M24 68 L76 68 L70 94 L30 94 Z" fill="#0f172a"/>
+      </svg>`;
+
+    case "MILITARY_UNIFORM":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M22 26 Q 50 10 78 22 C84 30, 68 34, 50 34 C32 34, 16 30, 22 26 Z" fill="#166534" stroke="#0f172a" stroke-width="3"/>
+        <circle cx="36" cy="24" r="3.5" fill="#facc15"/>
+        <ellipse cx="50" cy="40" rx="16" ry="14" fill="#fed7aa" stroke="#0f172a" stroke-width="3"/>
+        <path d="M16 54 L32 46 L68 46 L84 54 L80 92 L20 92 Z" fill="#4a5d4e" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="30" y="58" width="10" height="7" rx="2" fill="#2d3a30"/>
+        <rect x="58" y="62" width="12" height="8" rx="2" fill="#786c5f"/>
+        <rect x="42" y="74" width="14" height="7" rx="2" fill="#1e293b"/>
+      </svg>`;
+
+    case "BEAUTY_EXPRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M15 70 L25 30 L40 50 L50 20 L60 50 L75 30 L85 70 Z" fill="#facc15" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+        <circle cx="50" cy="20" r="5" fill="#ef4444"/>
+        <circle cx="25" cy="30" r="4" fill="#38bdf8"/>
+        <circle cx="75" cy="30" r="4" fill="#38bdf8"/>
+        <rect x="15" y="70" width="70" height="12" rx="4" fill="#eab308" stroke="#0f172a" stroke-width="3"/>
+      </svg>`;
+
+    case "NECKLACE":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <path d="M15 18 Q 50 78 85 18" stroke="#0f172a" stroke-width="5" fill="none" stroke-dasharray="7 5"/>
+        <polygon points="50,48 68,68 50,92 32,68" fill="#38bdf8" stroke="#0f172a" stroke-width="4"/>
+      </svg>`;
+
+    case "INDIVIDUALITY_EXPRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <rect x="16" y="38" width="30" height="22" rx="6" fill="#0f172a"/>
+        <rect x="54" y="38" width="30" height="22" rx="6" fill="#0f172a"/>
+        <line x1="46" y1="48" x2="54" y2="48" stroke="#0f172a" stroke-width="5"/>
+        <path d="M30 75 Q 50 90 70 75" stroke="#ef4444" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>`;
+
+    case "UNIQUE_BAG":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <rect x="22" y="30" width="56" height="60" rx="16" fill="#c084fc" stroke="#0f172a" stroke-width="4"/>
+        <path d="M36 30 C36 14, 64 14, 64 30" fill="none" stroke="#0f172a" stroke-width="5"/>
+        <rect x="32" y="56" width="36" height="24" rx="8" fill="#e9d5ff" stroke="#0f172a" stroke-width="3"/>
+      </svg>`;
+
+    case "BOMB":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <circle cx="50" cy="55" r="30" fill="#1e293b" stroke="#0f172a" stroke-width="4"/>
+        <path d="M50 25 C50 15, 65 15, 70 10" fill="none" stroke="#b45309" stroke-width="4"/>
+        <polygon points="70,5 75,12 65,12" fill="#ef4444"/>
+        <circle cx="40" cy="50" r="4" fill="#fff"/>
+        <circle cx="60" cy="50" r="4" fill="#fff"/>
+        <path d="M40 68 Q 50 60 60 68" stroke="#fff" stroke-width="3" fill="none"/>
+      </svg>`;
+
+    case "HAMMER_PROTECT":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <rect x="44" y="45" width="12" height="50" rx="6" fill="#facc15" stroke="#b45309" stroke-width="3"/>
+        <rect x="15" y="15" width="70" height="34" rx="12" fill="#2563eb" stroke="#1d4ed8" stroke-width="4"/>
+        <rect x="10" y="20" width="10" height="24" rx="4" fill="#60a5fa"/>
+        <rect x="80" y="20" width="10" height="24" rx="4" fill="#60a5fa"/>
+        <text x="50" y="38" font-size="18" font-weight="900" fill="#ffffff" text-anchor="middle">보호</text>
+      </svg>`;
+
+    case "HAMMER_EXPRESS":
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+        <rect x="44" y="45" width="12" height="50" rx="6" fill="#facc15" stroke="#b45309" stroke-width="3"/>
+        <rect x="15" y="15" width="70" height="34" rx="12" fill="#ec4899" stroke="#be185d" stroke-width="4"/>
+        <rect x="10" y="20" width="10" height="24" rx="4" fill="#f472b6"/>
+        <rect x="80" y="20" width="10" height="24" rx="4" fill="#f472b6"/>
+        <text x="50" y="38" font-size="18" font-weight="900" fill="#ffffff" text-anchor="middle">표현</text>
+      </svg>`;
+
+    case "MOLE_FACE":
+    default:
+      return `<svg viewBox="0 0 100 90" width="100%" height="100%">
+        <ellipse cx="50" cy="55" rx="40" ry="34" fill="#b45309" stroke="#451a03" stroke-width="4"/>
+        <ellipse cx="50" cy="63" rx="24" ry="18" fill="#fde68a"/>
+        <ellipse cx="50" cy="54" rx="8" ry="6" fill="#451a03"/>
+        <circle cx="34" cy="45" r="5" fill="#0f172a"/>
+        <circle cx="66" cy="45" r="5" fill="#0f172a"/>
+        <circle cx="36" cy="43" r="2" fill="#fff"/>
+        <circle cx="68" cy="43" r="2" fill="#fff"/>
+        <path d="M44 70 Q 50 74 56 70" stroke="#451a03" stroke-width="3" fill="none"/>
+      </svg>`;
+  }
+}
+
+// 교과서 기반 독립 키워드 데이터
+const PROTECTION_DATA = [
+  { text: "체온 조절", graphic: "THERMAL_CONTROL" },
+  { text: "방한복", graphic: "THERMAL_COLD" },
+  { text: "방서복", graphic: "THERMAL_HOT" },
+  { text: "청결 유지", graphic: "CLEAN_MAINTAIN" },
+  { text: "속옷", graphic: "UNDERWEAR" },
+  { text: "양말", graphic: "SOCKS" },
+  { text: "신체 안전", graphic: "SAFETY_BODY" },
+  { text: "소방복", graphic: "FIRE_SUIT" },
+  { text: "실험복", graphic: "LAB_COAT" },
+  { text: "구명조끼", graphic: "LIFE_VEST" },
+  { text: "능률 향상", graphic: "EFFICIENCY_UP" },
+  { text: "작업복", graphic: "WORK_CLOTHES" },
+  { text: "운동복", graphic: "SPORTSWEAR" },
+  { text: "수영복", graphic: "SWIMSUIT" }
+];
+
+const EXPRESSION_DATA = [
+  { text: "예의 표현", graphic: "POLITE_EXPRESS" },
+  { text: "예복", graphic: "FORMAL_DRESS" },
+  { text: "상복", graphic: "MOURNING_SUIT" },
+  { text: "혼례복", graphic: "WEDDING_DRESS" },
+  { text: "신분 표현", graphic: "STATUS_EXPRESS" },
+  { text: "교복", graphic: "SCHOOL_UNIFORM" },
+  { text: "경찰복", graphic: "POLICE_UNIFORM" },
+  { text: "군복", graphic: "MILITARY_UNIFORM" },
+  { text: "아름다움 표현", graphic: "BEAUTY_EXPRESS" },
+  { text: "귀걸이", graphic: "EARRINGS" },
+  { text: "목걸이", graphic: "NECKLACE" },
+  { text: "개성 표현", graphic: "INDIVIDUALITY_EXPRESS" },
+  { text: "독특한 운동화", graphic: "UNIQUE_SHOES" },
+  { text: "독특한 가방", graphic: "UNIQUE_BAG" }
+];
+
+let studentNickname = "";
+let selectedGameMode = "RECORD";
+let activeTab = "RECORD";
+let targetCategory = ""; 
+let score = 0, timeLeft = 150, gameTimer = null, moleLoopTimer = null;
+let successCount = 0, failCount = 0;
+let isAdmin = false;
+let comboCount = 0;
+let popupCountdownTimer = null;
+
+let moleData = Array(9).fill(null).map(() => ({ active: false, type: "", text: "", graphic: "", timer: null }));
+let popInterval = 1700;
+let popDuration = 2600;
+
+const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('mole_game_sync_v4') : null;
+if (syncChannel) {
+  syncChannel.onmessage = (event) => {
+    if (event.data === 'UPDATE_LEADERBOARD') {
+      loadLeaderboard();
+    }
+  };
+}
+
+// 9개 구멍 생성
+const board = document.getElementById("mole-board");
+for (let i = 0; i < 9; i++) {
+  const holeWrapper = document.createElement("div");
+  holeWrapper.className = "hole-wrapper";
+  holeWrapper.innerHTML = `
+    <div class="hole-bg"></div>
+    <div class="mole" id="mole-${i}" onclick="hitMole(${i})">
+      <div class="mole-quiz-area" id="mole-quiz-${i}"></div>
+      <div class="mole-body-img" id="mole-body-${i}"></div>
+    </div>
+  `;
+  board.appendChild(holeWrapper);
+}
+
+function openAdminModal() {
+  let pw = prompt("관리자 비밀번호 8자리를 입력하세요:");
+  if (pw === "20260101") {
+    isAdmin = true;
+    alert("관리자 모드가 활성화되었습니다. 기록을 삭제할 수 있습니다.");
+    openLeaderboardScreen();
+  } else if (pw !== null) {
+    alert("비밀번호가 올바르지 않습니다.");
+  }
+}
+
+function openStudyScreen() {
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("study-screen").classList.remove("hidden");
+}
+
+function closeStudyScreen() {
+  document.getElementById("study-screen").classList.add("hidden");
+  startRoulette();
+}
+
+function openLeaderboardScreen() {
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("leaderboard-screen").classList.remove("hidden");
+  switchLeaderboardTab(selectedGameMode);
+}
+
+function closeLeaderboardScreen() {
+  document.getElementById("leaderboard-screen").classList.add("hidden");
+  document.getElementById("start-screen").classList.remove("hidden");
+}
+
+function switchLeaderboardTab(tab) {
+  activeTab = tab;
+  
+  document.getElementById("tab-record-btn").className = "tab-btn " + (tab === "RECORD" ? "active" : "");
+  document.getElementById("tab-practice-btn").className = "tab-btn " + (tab === "PRACTICE" ? "active" : "");
+  
+  if (document.getElementById("res-tab-record-btn")) {
+    document.getElementById("res-tab-record-btn").className = "tab-btn " + (tab === "RECORD" ? "active" : "");
+    document.getElementById("res-tab-practice-btn").className = "tab-btn " + (tab === "PRACTICE" ? "active" : "");
+  }
+
+  const titleElem = document.getElementById("leaderboard-title");
+  if (titleElem) {
+    titleElem.textContent = tab === "RECORD" ? "🏆 실시간 점수표" : "🏋️ 연습 모드 점수표";
+  }
+
+  loadLeaderboard();
+}
+
+function startRoulette() {
+  studentNickname = document.getElementById("student-nickname").value.trim();
+
+  if (!studentNickname) {
+    alert("닉네임을 입력해 주세요!");
+    return;
+  }
+
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("roulette-screen").classList.remove("hidden");
+
+  const hammerText = document.getElementById("hammer-text");
+  const hammerIcon = document.getElementById("hammer-icon");
+  const options = ["보호 망치", "표현 망치"];
+  let count = 0;
+  
+  const interval = setInterval(() => {
+    hammerText.textContent = options[count % 2];
+    hammerIcon.innerHTML = generateSvgGraphic(count % 2 === 0 ? "HAMMER_PROTECT" : "HAMMER_EXPRESS");
+    hammerText.style.color = (count % 2 === 0) ? "#2563eb" : "#ec4899";
+    count++;
+  }, 90);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    targetCategory = Math.random() < 0.5 ? "PROTECTION" : "EXPRESSION";
+    if (targetCategory === "PROTECTION") {
+      hammerIcon.innerHTML = generateSvgGraphic("HAMMER_PROTECT");
+      hammerText.textContent = "보호 망치";
+      hammerText.style.color = "#2563eb";
+    } else {
+      hammerIcon.innerHTML = generateSvgGraphic("HAMMER_EXPRESS");
+      hammerText.textContent = "표현 망치";
+      hammerText.style.color = "#ec4899";
+    }
+    document.getElementById("roulette-next-btn").classList.remove("hidden");
+  }, 2000);
+}
+
+function showHammerKeywordPopup() {
+  document.getElementById("roulette-screen").classList.add("hidden");
+  document.getElementById("hammer-popup-screen").classList.remove("hidden");
+
+  const titleElem = document.getElementById("hammer-popup-title");
+  const listElem = document.getElementById("hammer-popup-list");
+  const timerNumElem = document.getElementById("popup-timer-num");
+  listElem.innerHTML = "";
+
+  const items = (targetCategory === "PROTECTION") ? PROTECTION_DATA : EXPRESSION_DATA;
+  titleElem.textContent = (targetCategory === "PROTECTION") ? "🔨 보호 망치 전용 키워드 (14가지)" : "🔨 표현 망치 전용 키워드 (14가지)";
+  titleElem.style.color = (targetCategory === "PROTECTION") ? "#1d4ed8" : "#be185d";
+
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "popup-item";
+    div.innerHTML = `
+      <span>${item.text}</span>
+      <div class="popup-item-img">${generateSvgGraphic(item.graphic)}</div>
+    `;
+    listElem.appendChild(div);
+  });
+
+  // 10초 타이머 자동 넘김 연출
+  let secondsLeft = 10;
+  timerNumElem.textContent = secondsLeft;
+  if (popupCountdownTimer) clearInterval(popupCountdownTimer);
+  popupCountdownTimer = setInterval(() => {
+    secondsLeft--;
+    timerNumElem.textContent = secondsLeft;
+    if (secondsLeft <= 0) {
+      clearPopupTimerAndStart();
+    }
+  }, 1000);
+}
+
+function clearPopupTimerAndStart() {
+  if (popupCountdownTimer) {
+    clearInterval(popupCountdownTimer);
+    popupCountdownTimer = null;
+  }
+  initGame();
+}
+
+function exitToHome() {
+  if (confirm("게임 진행 중입니다. 정말 홈 화면으로 나가시겠습니까?")) {
+    clearInterval(gameTimer);
+    clearInterval(moleLoopTimer);
+    if (popupCountdownTimer) clearInterval(popupCountdownTimer);
+    document.getElementById("game-screen").classList.add("hidden");
+    document.getElementById("start-screen").classList.remove("hidden");
+    document.getElementById("roulette-next-btn").classList.add("hidden");
+  }
+}
+
+function initGame() {
+  document.getElementById("hammer-popup-screen").classList.add("hidden");
+  document.getElementById("game-screen").classList.remove("hidden");
+
+  score = 0;
+  comboCount = 0;
+  timeLeft = 150;
+  popInterval = 1700;
+  popDuration = 2600;
+  successCount = 0;
+  failCount = 0;
+
+  document.getElementById("hud-user").textContent = studentNickname;
+  document.getElementById("hud-mode-badge").textContent = "🎮 진행중";
+  document.getElementById("hud-score").textContent = score;
+  document.getElementById("hud-timer").textContent = timeLeft;
+
+  const targetBadge = document.getElementById("hud-target-badge");
+  if (targetCategory === "PROTECTION") {
+    targetBadge.textContent = "🔨 보호 망치";
+    targetBadge.className = "target-badge bg-protection";
+  } else {
+    targetBadge.textContent = "🔨 표현 망치";
+    targetBadge.className = "target-badge bg-expression";
+  }
+
+  // 기본 두더지 얼굴 이미지 지정
+  for (let i = 0; i < 9; i++) {
+    document.getElementById(`mole-body-${i}`).innerHTML = generateSvgGraphic("MOLE_FACE");
+  }
+
+  gameTimer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("hud-timer").textContent = timeLeft;
+
+    if (timeLeft % 15 === 0 && popInterval > 850) {
+      popInterval -= 60;
+      popDuration -= 80;
+    }
+
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+
+  popUpBatch();
+  moleLoopTimer = setInterval(popUpBatch, popInterval);
+}
+
+function popUpBatch() {
+  let spawnCount = Math.random() < 0.3 ? 2 : 1;
+  for (let i = 0; i < spawnCount; i++) {
+    setTimeout(popUpMole, i * 350);
+  }
+}
+
+function popUpMole() {
+  let emptyHoles = [];
+  moleData.forEach((m, idx) => { if (!m.active) emptyHoles.push(idx); });
+
+  if (emptyHoles.length === 0) return;
+
+  let holeIdx = emptyHoles[Math.floor(Math.random() * emptyHoles.length)];
+  let isBomb = Math.random() < 0.18;
+  let type = "", text = "", graphic = "";
+
+  if (isBomb) {
+    type = "BOMB";
+    text = "";
+    graphic = "BOMB";
+  } else {
+    let isProtection = Math.random() < 0.5;
+    if (isProtection) {
+      type = "PROTECTION";
+      let item = PROTECTION_DATA[Math.floor(Math.random() * PROTECTION_DATA.length)];
+      text = item.text;
+      graphic = item.graphic;
+    } else {
+      type = "EXPRESSION";
+      let item = EXPRESSION_DATA[Math.floor(Math.random() * EXPRESSION_DATA.length)];
+      text = item.text;
+      graphic = item.graphic;
+    }
+  }
+
+  const moleElem = document.getElementById(`mole-${holeIdx}`);
+  const quizElem = document.getElementById(`mole-quiz-${holeIdx}`);
+
+  // 50% 확률로 머리 위 텍스트 키워드 vs SVG 아트워크 무작위 출현
+  let showAsText = (type !== "BOMB") && (Math.random() < 0.5);
+  if (type === "BOMB") {
+    quizElem.innerHTML = generateSvgGraphic("BOMB");
+  } else if (showAsText) {
+    quizElem.textContent = text;
+  } else {
+    quizElem.innerHTML = generateSvgGraphic(graphic);
+  }
+
+  moleElem.className = "mole up";
+
+  moleData[holeIdx] = {
+    active: true,
+    type: type,
+    text: text,
+    graphic: graphic,
+    timer: setTimeout(() => {
+      if (type === targetCategory) {
+        comboCount = 0; // 놓쳤을 경우 콤보 리셋
+        score -= 10;
+        failCount++;
+        showFloatScore("-10 😢", holeIdx, "#dc2626");
+        document.getElementById("hud-score").textContent = score;
+      }
+      hideMole(holeIdx);
+    }, popDuration)
+  };
+}
+
+function hitMole(holeIdx) {
+  let m = moleData[holeIdx];
+  if (!m || !m.active) return;
+
+  clearTimeout(m.timer);
+
+  if (m.type === "BOMB") {
+    comboCount = 0;
+    score -= 10;
+    failCount++;
+    showFloatScore("-10 💣", holeIdx, "#ef4444");
+  } else if (m.type === targetCategory) {
+    comboCount++;
+    let addScore = comboCount * 10;
+    score += addScore;
+    successCount++;
+    let comboTxt = comboCount > 1 ? `+${addScore} 🔥${comboCount}연속!` : `+10점`;
+    showFloatScore(comboTxt, holeIdx, "#16a34a");
+  } else {
+    comboCount = 0;
+    score -= 20;
+    failCount++;
+    showFloatScore("-20 ❌", holeIdx, "#dc2626");
+  }
+
+  document.getElementById("hud-score").textContent = score;
+  hideMole(holeIdx);
+}
+
+function showFloatScore(text, holeIdx, color) {
+  const moleElem = document.getElementById(`mole-${holeIdx}`);
+  const rect = moleElem.getBoundingClientRect();
+  const board = document.getElementById("mole-board");
+  const boardRect = board.getBoundingClientRect();
+
+  const floatElem = document.createElement("div");
+  floatElem.className = "float-score";
+  floatElem.textContent = text;
+  floatElem.style.color = color;
+  floatElem.style.left = (rect.left - boardRect.left + rect.width / 2 - 30) + "px";
+  floatElem.style.top = (rect.top - boardRect.top) + "px";
+
+  board.appendChild(floatElem);
+  setTimeout(() => floatElem.remove(), 800);
+}
+
+function hideMole(holeIdx) {
+  const moleElem = document.getElementById(`mole-${holeIdx}`);
+  moleElem.classList.remove("up");
+  moleData[holeIdx] = { active: false, type: "", text: "", graphic: "", timer: null };
+}
+
+function endGame() {
+  clearInterval(gameTimer);
+  clearInterval(moleLoopTimer);
+  moleData.forEach(m => { if (m.timer) clearTimeout(m.timer); });
+
+  document.getElementById("game-screen").classList.add("hidden");
+  document.getElementById("result-screen").classList.remove("hidden");
+
+  document.getElementById("res-mode-text").textContent = "🏆 게임 종료! 점수 집계 완료";
+  document.getElementById("res-user").textContent = studentNickname;
+  document.getElementById("res-target").textContent = (targetCategory === "PROTECTION") ? "보호 망치" : "표현 망치";
+  document.getElementById("res-success").textContent = successCount;
+  document.getElementById("res-fail").textContent = failCount;
+  document.getElementById("res-score").textContent = score;
+
+  saveLeaderboard(studentNickname, targetCategory === "PROTECTION" ? "보호" : "표현", score, selectedGameMode);
+  switchLeaderboardTab(selectedGameMode);
+
+  if (syncChannel) {
+    syncChannel.postMessage('UPDATE_LEADERBOARD');
+  }
+}
+
+function saveLeaderboard(name, target, score, mode) {
+  try {
+    let key = mode === "RECORD" ? "mole_game_records_v4" : "mole_game_practice_v4";
+    let records = JSON.parse(localStorage.getItem(key) || "[]");
+    records.push({ id: Date.now(), name, target, score, date: new Date().toLocaleTimeString() });
+    records.sort((a, b) => b.score - a.score);
+    localStorage.setItem(key, JSON.stringify(records));
+  } catch (e) {
+    console.warn("Storage restricted:", e);
+  }
+}
+
+function deleteRecord(recId) {
+  if (!isAdmin) return;
+  if (!confirm("해당 기록을 삭제하시겠습니까?")) return;
+
+  try {
+    let key = activeTab === "RECORD" ? "mole_game_records_v4" : "mole_game_practice_v4";
+    let records = JSON.parse(localStorage.getItem(key) || "[]");
+    records = records.filter(r => r.id !== recId);
+    localStorage.setItem(key, JSON.stringify(records));
+  } catch (e) {
+    console.warn("Storage restricted:", e);
+  }
+  loadLeaderboard();
+
+  if (syncChannel) {
+    syncChannel.postMessage('UPDATE_LEADERBOARD');
+  }
+}
+
+function loadLeaderboard() {
+  let records = [];
+  try {
+    let key = activeTab === "RECORD" ? "mole_game_records_v4" : "mole_game_practice_v4";
+    records = JSON.parse(localStorage.getItem(key) || "[]");
+  } catch (e) {
+    console.warn("Storage restricted:", e);
+  }
+  
+  const adminCols = document.querySelectorAll(".admin-col");
+  adminCols.forEach(col => {
+    if (isAdmin) col.classList.remove("hidden");
+    else col.classList.add("hidden");
+  });
+
+  const tbody = document.getElementById("leaderboard-body-main");
+  const tbodyRes = document.getElementById("leaderboard-body-result");
+
+  [tbody, tbodyRes].forEach(b => {
+    if (!b) return;
+    b.innerHTML = "";
+    if (records.length === 0) {
+      b.innerHTML = `<tr><td colspan="${isAdmin ? 5 : 4}">아직 기록된 점수가 없습니다.</td></tr>`;
+      return;
+    }
+    records.slice(0, 20).forEach((rec, idx) => {
+      let medal = (idx === 0) ? "🥇 1등" : (idx === 1) ? "🥈 2등" : (idx === 2) ? "🥉 3등" : `${idx + 1}`;
+      let row = `<tr>
+        <td>${medal}</td>
+        <td>${rec.name}</td>
+        <td>${rec.target}</td>
+        <td><strong>${rec.score}</strong></td>
+        ${isAdmin ? `<td><button class="delete-btn" onclick="deleteRecord(${rec.id})">삭제</button></td>` : ''}
+      </tr>`;
+      b.innerHTML += row;
+    });
+  });
+}
+
+function exportToCSV() {
+  let records = [];
+  try {
+    let key = activeTab === "RECORD" ? "mole_game_records_v4" : "mole_game_practice_v4";
+    records = JSON.parse(localStorage.getItem(key) || "[]");
+  } catch (e) {
+    console.warn("Storage restricted:", e);
+  }
+  
+  if (records.length === 0) {
+    alert("저장된 점수 기록이 없습니다.");
+    return;
+  }
+
+  let modeTitle = activeTab === "RECORD" ? "기록모드" : "연습모드";
+  let csvContent = `\uFEFF순위,닉네임,망치,점수,기록시간(${modeTitle})\n`;
+  records.forEach((rec, idx) => {
+    csvContent += `${idx + 1},${rec.name},${rec.target},${rec.score},${rec.date}\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `의복의기능_두더지잡기_${modeTitle}_점수표.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetApp() {
+  document.getElementById("result-screen").classList.add("hidden");
+  document.getElementById("start-screen").classList.remove("hidden");
+  document.getElementById("roulette-next-btn").classList.add("hidden");
+}
+
+window.onload = () => {
+  // 보호의 기능 14가지 개별 아이콘 바인딩
+  document.getElementById("svg-study-thermal-ctrl").innerHTML = generateSvgGraphic("THERMAL_CONTROL");
+  document.getElementById("svg-study-thermal-cold").innerHTML = generateSvgGraphic("THERMAL_COLD");
+  document.getElementById("svg-study-thermal-hot").innerHTML = generateSvgGraphic("THERMAL_HOT");
+  document.getElementById("svg-study-clean-main").innerHTML = generateSvgGraphic("CLEAN_MAINTAIN");
+  document.getElementById("svg-study-underwear").innerHTML = generateSvgGraphic("UNDERWEAR");
+  document.getElementById("svg-study-socks").innerHTML = generateSvgGraphic("SOCKS");
+  document.getElementById("svg-study-safety-body").innerHTML = generateSvgGraphic("SAFETY_BODY");
+  document.getElementById("svg-study-fire-suit").innerHTML = generateSvgGraphic("FIRE_SUIT");
+  document.getElementById("svg-study-lab-coat").innerHTML = generateSvgGraphic("LAB_COAT");
+  document.getElementById("svg-study-life-vest").innerHTML = generateSvgGraphic("LIFE_VEST");
+  document.getElementById("svg-study-efficiency-up").innerHTML = generateSvgGraphic("EFFICIENCY_UP");
+  document.getElementById("svg-study-work-clothes").innerHTML = generateSvgGraphic("WORK_CLOTHES");
+  document.getElementById("svg-study-sportswear").innerHTML = generateSvgGraphic("SPORTSWEAR");
+  document.getElementById("svg-study-swimsuit").innerHTML = generateSvgGraphic("SWIMSUIT");
+
+  // 표현의 기능 14가지 개별 아이콘 바인딩
+  document.getElementById("svg-study-polite-express").innerHTML = generateSvgGraphic("POLITE_EXPRESS");
+  document.getElementById("svg-study-formal-dress").innerHTML = generateSvgGraphic("FORMAL_DRESS");
+  document.getElementById("svg-study-mourning-suit").innerHTML = generateSvgGraphic("MOURNING_SUIT");
+  document.getElementById("svg-study-wedding-dress").innerHTML = generateSvgGraphic("WEDDING_DRESS");
+  document.getElementById("svg-study-status-express").innerHTML = generateSvgGraphic("STATUS_EXPRESS");
+  document.getElementById("svg-study-school-uniform").innerHTML = generateSvgGraphic("SCHOOL_UNIFORM");
+  document.getElementById("svg-study-police-uniform").innerHTML = generateSvgGraphic("POLICE_UNIFORM");
+  document.getElementById("svg-study-military-uniform").innerHTML = generateSvgGraphic("MILITARY_UNIFORM");
+  document.getElementById("svg-study-beauty-express").innerHTML = generateSvgGraphic("BEAUTY_EXPRESS");
+  document.getElementById("svg-study-earrings").innerHTML = generateSvgGraphic("EARRINGS");
+  document.getElementById("svg-study-necklace").innerHTML = generateSvgGraphic("NECKLACE");
+  document.getElementById("svg-study-individuality-express").innerHTML = generateSvgGraphic("INDIVIDUALITY_EXPRESS");
+  document.getElementById("svg-study-unique-shoes").innerHTML = generateSvgGraphic("UNIQUE_SHOES");
+  document.getElementById("svg-study-unique-bag").innerHTML = generateSvgGraphic("UNIQUE_BAG");
+
+  loadLeaderboard();
+};
+</script>
+</body>
+</html>
